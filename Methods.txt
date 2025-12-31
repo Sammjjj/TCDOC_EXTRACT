@@ -1,0 +1,173 @@
+﻿1. Methods
+1. Overview
+Action plan documents were analysed from UK universities that have signed the Technician Commitment, examining what institutions committed to doing, how they categorised their actions, and what progress they reported. The full analytical workflow is shown in Figure 1, and detailed technical methods are provided in Supplementary Methods. All code is available at https://github.com/Sammjjj/TCDOC_EXTRACT.
+2. Document Collection
+Action plan documents were collected from university websites and the Technician Commitment website (see Table S1 for full list). Where institutions had produced multiple versions, only the most recent action plan was used. Documents were stored and organised systematically to enable automated processing.
+3. Extracting Actions from Documents
+Automated text extraction was used to identify specific action items, tasks, or commitments from each document. A machine learning model (Google Gemini 2.5) was instructed to extract all discrete actions and present them as a structured list. This approach allowed consistent processing across documents of varying formats and lengths, producing a dataset of 3,410 individual actions.
+4. Categorising Actions
+A system to classify actions into meaningful themes was developed. Starting with nine broad categories based on common themes in workforce development (such as recognition, training, and career progression; Table S2), a dictionary of keywords was built associated with each category. The keyword lists were refined through multiple rounds of testing until the system reliably identified action types (Table S3).
+Each action was then scored against all categories based on which keywords it contained. Actions could be assigned to multiple categories if relevant, or flagged as uncategorised if they did not match any theme strongly enough. The categorisation system's accuracy was tested against a manually classified sample of 341 actions, achieving good sensitivity (correctly identifying relevant actions) and specificity (correctly excluding irrelevant actions) across most categories (see Table 1).
+5. Identifying Sub-themes Within Categories
+To understand the diversity of approaches within each broad category, more specific sub-themes were identified. A statistical technique (TF-IDF analysis) was used to find the most distinctive and important words within each category. Based on these results, Google Gemini defined sub-categories representing different aspects of each theme. Actions were then assigned to sub-categories using the same keyword-matching approach as the main categorisation. Categories with 100 or more occurrences in the dataset were used for further analysis in g below (n=8 categories). 
+6. Analysing Reported Progress
+To track how institutional commitments evolved over time, an automated workflow was developed to analyse actions from both Action Plans and their corresponding Red/Amber/Green (RAG) assessment documents across multiple assessment periods. This analysis focused on understanding action progression between periods, where red indicated delayed or incomplete actions, amber indicated work in progress, and green indicated completed actions.
+i. Action Extraction and Document Processing
+All available Action Plan and RAG assessment documents were accessed via Google Drive. For documents with structured tables containing explicit RAG columns, intelligent column detection algorithms were used that could identify and merge continuation rows across multiple table sections. For unstructured documents, Google's Gemini 2.0 language model was used to extract individual actions while preserving their semantic completeness. All extracted actions were assigned to the same 26-category taxonomy using the keyword-matching approach described above.
+ii. Action Matching and Trajectory Analysis
+A three-tier matching strategy was implemented to track how actions evolved across assessment periods. First, for actions from the same period (e.g., comparing an Action Plan to its corresponding RAG assessment), TF-IDF similarity was again used to identify near-identical or closely matching actions. Second, for cross-period comparisons (e.g., tracking a RAG-assessed action from Period 1 to the next Action Plan in Period 2), Gemini AI batch processing was employed to perform intelligent semantic matching. The AI classified relationships as "Identical" (unchanged), "Extended" (more ambitious), "Narrowed" (more focused), "Related" (connected but different), or "Unrelated". This approach enabled us to distinguish genuine action evolution from simple continuity. Finally, trajectory codes were generated tracking whether each action Continued, was Related to a successor, Stopped with no continuation, or appeared as New with no predecessor.
+iii. ​​Composite RAG-Trajectory Metrics 
+To understand how institutions responded to their commitments over time, four complementary metrics were developed that combine action completion status with evolution patterns. Each action in the RAG (Red-Amber-Green) review periods was assigned a composite code combining its completion status (Green=completed, Amber=ongoing, Red=delayed) with how it evolved into the next action plan (Continued, Related/adapted, or Stopped). For example, a completed action that was sustained receives code "GC" (Green-Continued), while an ongoing action that was refined receives "AR" (Amber-Related).
+From these composite codes, four metrics were calculated for each action category:
+* Successful, completed (%): The percentage of reviewed actions that were completed (Green status), measuring overall delivery on commitments.
+* Successful, continued (%): Among completed actions, the percentage that were sustained or evolved rather than stopped, measuring whether successful work is embedded into ongoing practice.
+* Adaptability score (0.0-1.0): Among challenged actions (Amber or Red status), the proportion that were refined or adapted rather than continued unchanged or abandoned, measuring institutional capacity to learn from difficulties.
+* Resilience score (0.0-1.0): Among challenged actions, the proportion that were sustained despite difficulties, measuring institutional commitment to maintaining difficult work.
+These metrics are designed to be interpreted together. For instance, high completion with high continuity suggests strong institutional capacity to deliver and sustain work, while low completion with high adaptability indicates a learning-oriented approach that actively refines struggling initiatives. This framework enabled identification of distinct institutional patterns in how organisations approach and evolve their commitments. 
+7. Mapping External Resources
+The support and resources available to technical staff beyond their own institutions were explored. Using the eight most common action sub-categories as examples, relevant UK-wide resources, professional bodies, networks, and support structures were systematically searched for. Universities' action plans were examined to determine whether they referenced these existing resources, providing insight into how well institutions were connecting their commitments to established infrastructure.
+8. Alignment with National Recommendations
+Finally, the actions in university plans were compared against the 16 recommendations from the TALENT Commission report, identifying which national priorities were well-represented in institutional commitments and which received less attention.
+
+
+1. Supplementary methods
+The workflow is outlined in Figure 1 and code is available at https://github.com/Sammjjj/TCDOC_EXTRACT. 
+      1.          Collation of Corpus - Action Plan documents
+Technician Commitment action plans and other documents produced by Universities are held on their websites (Table S1), in compliance with the TC. In addition, they are held on the Technician Commitment website [21]. Google Drive was used to collate the corpus. All available documents were downloaded and renamed in a consistent manner (by city and institution, and indicating whether it was an action plan document, RAG analysis, both or other type of document). Where there was more than one document of a type from an institution, these were also named by date of authorship to identify the most recent. Only the most recent Action Plan documents were taken forward into the analysis (listed in Table S1), and were copied to a separate folder. Python was used to script and carry out many of the functions of data extraction and cleaning, action categorisation and performance evaluation, as described below.
+      2.          Extraction of action items from each document (document_extract2.py)
+Authentication and Data Access
+Initial access to the Google Drive repository was established using the OAuth 2.0 protocol. The script used the google-auth-oauthlib and google-api-python-client libraries to handle the authentication flow. 
+File Retrieval and Content Extraction
+The script looped through all files within a specified parent folder in Google Drive. For each identified file, the MIME type was inspected to determine the appropriate text extraction procedure. For native Google Documents (application/vnd.google-apps.document), the content was extracted by exporting the file as plain text (text/plain) using the Google Drive API's export_media method. For Portable Document Format (PDF) files (application/pdf), the files were downloaded in-memory using the get_media method. The pdfplumber library was then used to parse the binary PDF data and extract the text content from each page. Files of other formats were converted to Google Doc or PDF prior to analysis.
+Text Pre-processing
+The raw text extracted from the documents underwent a reflowing process to correct for artificial line breaks introduced during optical character recognition (OCR) or text wrapping. 
+Action Item Extraction via Large Language Model
+The pre-processed text from each document was submitted to a generative large language model for analysis (gemini-2.5-pro) via the Vertex AI platform. A specific prompt was engineered to extract all specific action items, tasks, or responsibilities, presenting them as a bulleted list. The model was configured with a temperature of 0.0 to ensure deterministic and consistent output. The extracted action items were parsed from the model's response and written to a comma-separated values (CSV) file with a link to the originating file.
+
+
+      3. Categorisation of Action Items (predefined_categories6.py)
+Following the extraction of action items, a second script was used to classify each item into predefined categories. This involved natural language preprocessing, the application of a weighted keyword lexicon, and a dynamic scoring algorithm to assign the most relevant categories.
+Development of the keyword lexicon (keyword_categories_4.json)
+Categories and Keywords were defined through iterative extraction and refinement of keywords using a human-in-the-loop implementation of Google gemini-2.5-pro and development versions of the predefined_categories6.py script. Briefly, starting with a manually curated list of 9 categories and 84 keywords likely to feature in the reports (Table S2), the script was run and evaluated, and the keyword list iterated based on the outcomes. 
+The resulting lexicon, shown in Table S3 was structured as a dictionary, mapping high-level categories to a set of specific keyword phrases, with each phrase assigned a numerical weight to signify its importance or relevance to the category.
+Natural Language Preprocessing (predefined_categories6.py)
+The input for this stage was the CSV file generated by the preceding extraction script, containing a list of discrete action items, and the keyword lexicon, which was loaded from a JSON file. To standardise both the action items and the keyword lexicon for comparison, a multi-step text preprocessing pipeline was employed using the Natural Language Toolkit (NLTK) library. For any given text string, the procedure was as follows:
+* Tokenization: The text was converted to lowercase and segmented into individual tokens.
+* Filtering: Non-alphanumeric tokens were removed. A standard English stopword list was applied to remove common, low-information words, with a set of custom exceptions to retain domain-specific context.
+* Part-of-Speech (POS) Tagging: Each remaining token was assigned a POS tag (e.g., noun, verb, adjective) using NLTK's averaged_perceptron_tagger.
+* Lemmatization: Tokens were reduced to their dictionary base form (lemma) using the WordNetLemmatizer. The POS tag from the previous step was used to track word characteristics for the lemmatization process, ensuring, for example, that verbs and nouns were treated according to their grammatical function.
+Weighted Scoring and Categorisation Algorithm
+An algorithm was developed to score and categorise each action item. For a given action, its set of unique lemmatized tokens was generated. The algorithm then iterated through each category in the keyword lexicon comparing with the token set. A multi-word keyword phrase was considered a match if all of its constituent tokens formed a subset of the action item's token set. A category's score was calculated by summing the weights of all its keyword phrases that were found within the action item. 
+Output Generation
+The final categorised data was written to a new CSV file and the assigned categories were appended using a ‘one-hot’ encoding scheme. This resulted in a binary column for each possible category, where a value of '1' indicated the assignment of that category to the action item in that row. An additional 'Uncategorised' column was added to flag items that did not meet the scoring threshold for any category.
+
+
+      4.          Performance Evaluation (evaluate_multi_col.py)
+To quantitatively assess the performance of the action item categorisation algorithm, the algorithm's output was compared against a manually curated ground truth dataset, and sensitivity and specificity were calculated for each category.
+Ground-truth classification
+The ground truth file was prepared by manually assigning a single, correct category to each action item to 10% of the total actions (n=341). Categories containing less than 10 actions were then supplemented with additional actions by manually searching the whole actions list for strong keywords and categorising. 
+Data Ingestion and Alignment (evaluate_multi_col.py)
+The evaluation process used two data sources: the one-hot encoded output file from the categorisation script, serving as the predictions; and a separate CSV file containing the ground truth classifications. The text in both the prediction and ground truth files was normalised by converting to lowercase and standardising whitespace, and the two datasets were then merged into a single dataframe.
+Performance Metric Calculation
+For each category, a confusion matrix was generated using the scikit-learn library; true labels were derived from the ground truth column, while predicted labels were taken from the corresponding one-hot encoded column in the merged dataset. From this matrix, the counts of True Positives (TP), False Positives (FP), True Negatives (TN), and False Negatives (FN) were determined.
+Evaluation Metrics
+Two primary metrics were calculated to evaluate the model's performance for each category:
+* Sensitivity (Recall): The proportion of actual positives that were correctly identified, calculated as: Sensitivity=TP/(TP+FN)​
+* Specificity: The proportion of actual negatives that were correctly identified, calculated as: Specificity=TN/(TN+FP)
+Reporting
+The results of the analysis were compiled into a final summary csv file providing the sensitivity, specificity, and the raw confusion matrix counts (TP, FP, TN, FN) for each category.
+      5.          Development of a sub-category classification lexicon
+Prior to rules-based sub-classification of action items, the most salient keywords within each high-level category were identified. This data-driven approach was designed to provide an empirical basis for the manual definition of sub-categories.
+Keyword Salience Calculation using TF-IDF (subclus_calc_weight.py)
+The data was split into category-specific corpi. For each, a Term Frequency-Inverse Document Frequency (TF-IDF) analysis was conducted using the TfidfVectorizer from the scikit-learn library. 
+This technique was chosen to identify terms that were not only frequent within a category but also distinctive. The vectorizer was configured with sublinear term frequency scaling (sublinear_tf=True) to reduce the impact of very high-frequency words and used a standard English stopword list to filter out common, non-descriptive terms.
+The TF-IDF scores for each term were summed across all documents in the corpus, producing a single, cumulative importance score for every term within the context of its category.
+Output for Rules-Based Sub-categorisation
+The terms were ranked based on their cumulative TF-IDF scores. For each high-level category, the top 15 keywords with the highest scores were identified. These ranked lists were compiled into a text file. 
+A hierarchical lexicon was automatically curated by Google Gemini based on the keywords identified in the TF-IDF analysis. This lexicon was structured as a Python dictionary where each key represented a high-level category. The value for each key was a further dictionary containing a set of predefined sub-cluster names, which in turn mapped to a list of specific keywords defining the theme of that sub-cluster.
+      6.          Sub-Category Classification (rule_based_class.py)
+A script was written to carry out this function (rule_based_class.py). For each action in the dataset, its high-level category was first identified to select the appropriate set of sub-cluster rules from the lexicon. The algorithm then applied a keyword frequency scoring method. For each potential sub-cluster, the script counted the occurrences of its associated keywords within the text of the action item. 
+An action item was assigned to the sub-cluster that achieved the highest keyword match count. In cases where no keywords from any sub-cluster were found, the item was labeled as 'Unassigned'. 
+The final output of this process was a new CSV file, with a new column containing the assigned sub-cluster name for each action item. 
+      7.          Analysis of RAG Assessments (rag_extract_simple12.py, rag_alignment_workflow_unpaired8.py)
+Document Acquisition and Multi-Format Extraction
+Action Plans and RAG assessment documents were retrieved programmatically from a Google Drive repository using the Google Drive API v3 with OAuth 2.0 authentication. The workflow handled three document formats: native PDF files (extracted using pdfplumber), Microsoft Word documents (.docx files, extracted using python-docx), and Google Docs (exported to DOCX format before processing). Document metadata (institution name, document type, assessment period number) was extracted from filenames using regular expression patterns supporting multiple naming conventions.
+Structured Table Extraction Algorithm
+For documents containing structured action tables with explicit RAG status columns, we implemented an intelligent column detection system (rag_extract_simple12.py, lines 223-517). The algorithm:
+1. Scanned table headers (rows 0 and 1) to identify columns containing "action", "step", or "what is to be done" for action text, and columns labeled "RAG" for status indicators.
+2. When multiple potential action columns were detected, selected the optimal column by prioritising exact "action" header matches, then choosing the column with the most text content in the first data row.
+3. Tracked column positions across continuation tables (tables lacking headers but continuing data from a previous table).
+4. Merged multi-row actions where text was split across consecutive table rows, using heuristics based on capitalisation patterns and sentence completion markers.
+5. Extracted RAG status using explicit markers (single letters R, A, G, or full words Red, Amber, Green), converting to standardised single-letter format.
+Unstructured Text Extraction via Large Language Model
+For documents lacking structured tables, action extraction was performed using Google's Gemini 2.0 Flash model (gemini-2.0-flash-001) via the Vertex AI API (rag_extract_simple12.py, lines 520-574). The model was instructed to:
+1. Identify discrete actions or commitments as complete, coherent sentences.
+2. Remove RAG status indicators from the action text itself (to prevent status labels contaminating semantic matching).
+3. Preserve sentence completeness (avoiding mid-sentence splits).
+4. Clean formatting artifacts including excess whitespace and line breaks within sentences.
+The Gemini prompt included the first 50,000 characters of each document and returned actions as newline-separated text, which was post-processed to remove remaining RAG indicators using regular expressions.
+Action Categorisation
+All extracted actions (both from tables and unstructured text) were categorised using the same keyword taxonomy and NLTK-based lemmatisation approach described in section ii(c). The categorisation step populated the "Category" column for every extracted action, enabling category-level trajectory analysis.
+Output Format
+Extraction produced a CSV file (rag_actions_extraction.csv) with columns: LineID (sequential identifier), Institution (organisation name), Document Type (AP1, AP2, AP3, RAG_AP1, RAG_AP2, RAG_AP3), Action (full action text), RAG value (R, A, or G for RAG documents; empty for Action Plans), and Category (populated by categorisation algorithm).
+
+
+Three-Tier Action Matching Strategy
+Following extraction, actions were matched across documents and time periods using a three-tier strategy (rag_alignment_workflow_unpaired8.py):
+Tier 1: Within-Period TF-IDF Matching (same assessment period)
+For action pairs from the same period (e.g., AP1 vs RAG_AP1), we used TF-IDF vectorization (sklearn.feature_extraction.text.TfidfVectorizer) followed by cosine similarity calculation. Actions with similarity ≥0.95 were classified as "Identical", ≥0.85 as "Match", and ≥0.70 as "Similar". This fast, deterministic method was appropriate for same-period comparisons where actions were expected to be nearly identical. Matching was performed bidirectionally: Action Plan actions were matched to their corresponding RAG assessment actions (AP->RAG_AP), and vice versa (RAG_AP->AP). Results were stored in columns "Match AP vs RAG_AP (LineID, Status)" and "Match RAG_AP vs AP (LineID, Status)".
+Tier 2: Cross-Period Batch AI Comparison (subsequent periods)
+For tracking action evolution across periods (e.g., RAG_AP1 -> AP2), we employed Gemini AI semantic analysis with batch optimisation (rag_alignment_workflow_unpaired8.py, lines 289-383). This approach:
+1. Compared one RAG-assessed action against up to 10 subsequent Action Plan actions in a single API call (reducing API costs ~10-fold compared to individual comparisons).
+2. Included category metadata in the comparison prompt to provide semantic context (e.g., "[Categories: Training; Development]").
+3. Requested the model classify relationships as:
+* "Identical": Essentially unchanged action
+* "Extended": RAG action evolved into more ambitious version
+* "Narrowed": RAG action became more focused/specific
+* "Related": Connected but different focus
+* "Unrelated": No meaningful connection
+4. Returned matches as JSON with relationship type and confidence score (0.0-1.0), filtering to include only matches with score ≥0.5.
+5. Selected the top 5 matches by score for each source action.
+Rate Limiting and API Quota Management
+To avoid exceeding Vertex AI free-tier quotas, we implemented conservative rate limiting (15 requests per minute) using a sliding window approach (rag_alignment_workflow_unpaired8.py, lines 177-196). Request timestamps were tracked in a deque structure, with automatic sleeping when approaching the per-minute limit. Additionally, a 4-second pause was enforced between batch comparisons.
+Checkpoint Architecture for Resumability
+Given the computational intensity of processing hundreds of actions across multiple institutions and periods, we implemented a checkpoint system allowing workflow resumption after interruptions (rag_alignment_workflow_unpaired8.py, lines 94-175). After completing each major task (categorisation, within-period matching) and each institution-period transition in cross-period matching, the workflow saved:
+1. Current dataframe state to CSV (checkpoints/checkpoint_name.csv)
+2. Workflow metadata to JSON (checkpoints/workflow_state.json), including last completed institution, period transition, and progress metrics
+On restart, the workflow detected existing checkpoints and offered resumption from the last saved state, preventing redundant API calls and computation.
+Trajectory Classification
+Following the three-tier matching process, each action was assigned a trajectory code:
+* C (Continued): Action persists with same focus (from "Identical" or "Extended" relationships)
+* R (Related): Action has related successor with different focus (from "Related" or "Narrowed" relationships)
+* S (Stopped): No successor action identified
+* N (New): Action with no predecessor
+* U (Unknown): Insufficient data to classify
+Derived Metrics for Organisational Analysis
+From the trajectory classifications and match data, we calculated seven metrics for each category:
+1. Growth Rate: (Actions in Period 3 - Period 1) / Period 1 × 100%
+2. Continuation Rate: (Continued + Related actions) / (Continued + Related + Stopped) × 100%
+3. Trajectory Diversity: Shannon entropy of trajectory type distribution (0-100% scale)
+4. Splitting Ratio: Average number of successor actions per source action (indicating elaboration of focus)
+5. Merging Ratio: Average number of predecessor actions per target action (indicating consolidation)
+6. Longevity Score: Percentage of Period 1 actions traceable through to Period 3
+7. Category Coherence: 1 - standard deviation of trajectory types, indicating uniform vs. divergent evolution
+Fallback Strategy and Robustness
+When Gemini AI was unavailable (due to quota limits, network issues, or API errors), the workflow automatically fell back to TF-IDF similarity for cross-period matching, preserving functionality at the cost of reduced relationship-type specificity. All API responses from Gemini were cached to a debug JSON file (rag_actions_extraction_MATCHED_gemini_debug.json) for quality assurance and reproducibility. In practice this was not used in this analysis. 
+Final Output
+The workflow produced an enriched CSV file (rag_actions_extraction_MATCHED.csv) containing:
+* All original extraction columns (LineID, Institution, Document Type, Action, RAG value, Category)
+* Within-period match columns showing bidirectional AP<->RAG_AP correspondences
+* Cross-period match columns showing RAG_AP(n) -> AP(n+1) trajectories with relationship classifications and scores
+* Trajectory codes and derived metrics enabling analysis of institutional commitment evolution over time
+This comprehensive approach enabled quantitative analysis of how institutional commitments evolved, which action types were sustained or discontinued, and which categories showed dynamic growth versus stability.
+Visualisation
+To enable intuitive interpretation of category-level action evolution across three assessment periods, we developed a publication-quality graphical summary using matplotlib (create_graphical_summary_Orig.py). The visualisation employed multiple simultaneous encoding strategies to represent five data dimensions: temporal period, category membership, action volume, trajectory type, and performance metrics.
+      8. Identification of resources available to the technical staff community
+The aim of this part of the analysis was to identify the additional support “Technical staff” can expect to be able to call on outside of their University or employer’s commitments, or between posts. The ten top-scoring sub-categories identified by the analysis in (f) above were used as exemplars to examine the provision of support and resources in each area outside of the signatory Universities. 
+To enable a wide search and identify any applicable websites or resources, information on the status of each action area was searched for manually using Google Search. The following search criteria were applied, with the ‘Verbatim’ setting switch to ‘On’, searching from the United Kingdom region:
+[subcategory title] AND (UK OR united kingdom) AND (technical staff OR technician OR technologist)
+The Google Chrome plugin ‘SERP Sonar’ was used to extract the search results, page titles and summaries to a csv file. The first 50 results for each were examined and relevant information was tabulated. Resources were added to a table and supplemented with other known resources. This allowed identification of support for provision compared to the ambitions of the Action Plan documents, and the identification of gaps in this support.
+      9. Back-checking of presence of identified resources in Actions
+A script was written to carry out this function (enumerate_resources.py). A lexicon of resource-related keywords was formed to represent the specific entities included in the tables following identification in (g) above. This new dictionary was incorporated into a JSON and applied again to the original extracted list of actions using a python script (enumerate_resources.py), with the aim of enumerating instances where these key resources had been mentioned in the action plans. Mentions were screened for instances of self-referral and remaining mentions put into a table.This was designed to provide a measure of the concordance between planned actions and existing resources, and examine the extent to which existing infrastructure or resources were being cited in action planning. 
+      10.          Comparison of TALENT report recommendations with actions and resources
+The TALENT commission report includes general and sector specific recommendations for implementation of its findings. The 16 recommendations were extracted from the text and manually aligned with the 26 categories resulting from the Action Plan documents. This identified the level of discussion of information pertinent to each recommendation in the Action Plans.
