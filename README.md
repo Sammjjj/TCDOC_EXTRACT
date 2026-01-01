@@ -13,7 +13,7 @@ A comprehensive Python-based natural language processing (NLP) toolkit for extra
 
 This toolkit accompanies the paper:
 
-> **"Synergies and Gaps in Technical Skills Development in UK Universities: A Semi-Quantitative Analysis of 'Technician Commitment' Action Plans and Progress Reports using Natural Language Processing"**
+> **"Synergies and Gaps in Support for Technical Career Development in UK Higher Education and Research: A Semi-Quantitative Analysis of ‘Technician Commitment’ Action Plans and Progress Reports using Natural Language Processing"**
 >
 > Dr. Samuel J Jackson, August 2025
 
