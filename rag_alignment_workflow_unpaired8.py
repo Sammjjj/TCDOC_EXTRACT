@@ -59,7 +59,7 @@ BATCH_PAUSE_SECONDS = 4  # Increased pause between batches
 # File paths
 INPUT_CSV_PATH = "rag_actions_extraction.csv"
 OUTPUT_CSV_PATH = "rag_actions_extraction_MATCHED.csv"
-KEYWORD_JSON_PATH = "keyword_categories_5.json"
+KEYWORD_JSON_PATH = "keyword_categories_4.json"
 
 # Checkpoint paths
 CHECKPOINT_DIR = "checkpoints"
