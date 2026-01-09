@@ -119,20 +119,20 @@ def parse_stage_number(filename):
     if rag_match:
         return int(rag_match.group(1))
 
-    # Pattern 3: Kent-style RAG (e.g., RAG1, RAG2)
-    kent_rag_simple = re.search(r"RAG(\d+)(?!.*ACTIONPLAN)", filename_upper)
-    if kent_rag_simple:
-        return int(kent_rag_simple.group(1))
+    # Pattern 3: Inst3-style RAG (e.g., RAG1, RAG2)
+    inst3_rag_simple = re.search(r"RAG(\d+)(?!.*ACTIONPLAN)", filename_upper)
+    if inst3_rag_simple:
+        return int(inst3_rag_simple.group(1))
 
     # Pattern 3b: RAG-AP format (e.g., RAG-AP1)
-    kent_rag_dash = re.search(r"RAG-AP(\d+)", filename_upper)
-    if kent_rag_dash:
-        return int(kent_rag_dash.group(1))
+    inst3_rag_dash = re.search(r"RAG-AP(\d+)", filename_upper)
+    if inst3_rag_dash:
+        return int(inst3_rag_dash.group(1))
 
-    # Pattern 4: Kent-style Action Plans (e.g., AP1, AP2, Kent-2024-AP1)
-    kent_ap_match = re.search(r"AP(\d+)", filename_upper)
-    if kent_ap_match:
-        return int(kent_ap_match.group(1))
+    # Pattern 4: Inst3-style Action Plans (e.g., AP1, AP2, Inst3-2024-AP1)
+    inst3_ap_match = re.search(r"AP(\d+)", filename_upper)
+    if inst3_ap_match:
+        return int(inst3_ap_match.group(1))
 
     # Pattern 5: Regular Action Plan (e.g., ActionPlan1, ActionPlan2)
     ap_match = re.search(r"ACTIONPLAN(\d+)", filename_upper)
