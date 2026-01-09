@@ -20,34 +20,33 @@ This toolkit accompanies the paper:
 > Dr. Samuel J Jackson, August 2025
 
 TCDOC_EXTRACT provides a complete workflow for:
-- 📄 **Extracting** action items from PDF and Google Doc formats
-- 🏷️ **Categorizing** actions using weighted keyword matching
-- 📊 **Analyzing** institutional progress through RAG (Red/Amber/Green) assessments
-- 🔗 **Tracking** action evolution across multiple time periods
-- 📈 **Visualizing** institutional commitment patterns and trends
+- **Extracting** action items from PDF and Google Doc formats
+- **Categorizing** actions using weighted keyword matching
+- **Analyzing** institutional progress through RAG (Red/Amber/Green) assessments
+- **Tracking** action evolution across multiple time periods
+- **Visualizing** institutional commitment patterns and trends
 
 ---
 
 ## Key Features
 
-### 🤖 AI-Powered Extraction
+### AI-Powered Extraction
 - Google Gemini 2.5 language model for intelligent action extraction
 - Handles diverse document formats (PDF, Google Docs, Word)
 - Preserves semantic completeness of actions
 
-### 🎯 Multi-Level Categorization
+### Multi-Level Categorization
 - 26 predefined thematic categories
 - Weighted keyword lexicon with 500+ domain-specific terms
 - Sub-category classification for nuanced analysis
 - NLTK-based lemmatization and POS tagging
 
-### 📊 Longitudinal Tracking
+### Longitudinal Tracking
 - Three-tier action matching strategy (TF-IDF + AI semantic analysis)
 - Trajectory classification (Continued, Related, Stopped, New)
 - Cross-period relationship detection (Identical, Extended, Narrowed)
 - 7 derived institutional metrics
 
-### ⚡ Production-Ready
 - Checkpoint-based resumability for large datasets
 - Automatic rate limiting and quota management
 - Batch processing optimization (10x API cost reduction)
@@ -482,10 +481,6 @@ For questions about:
   - Checkpoint resumability
 
 ---
-
-## Project Status
-
-✅ **Stable** - Published research toolkit
 
 This codebase is the finalized version accompanying the published paper. It is maintained for reproducibility and community use.
 
